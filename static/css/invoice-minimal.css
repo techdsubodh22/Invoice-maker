@@ -1,0 +1,221 @@
+/* Minimal Template — Pure typography, zero clutter */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 10.5pt;
+  line-height: 1.6;
+}
+
+.invoice-page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  padding: 16mm 18mm 20mm;
+}
+
+/* ---- Header ---- */
+.inv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.inv-header-left {}
+
+.inv-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 36pt;
+  font-weight: 400;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.inv-issuer {
+  font-size: 10pt;
+  color: #888;
+  margin-top: 6px;
+  font-weight: 400;
+}
+
+.inv-header-right {
+  text-align: right;
+  padding-top: 4px;
+}
+
+.inv-number {
+  font-size: 11pt;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: 0.5px;
+}
+
+.inv-dates {
+  font-size: 9pt;
+  color: #888;
+  margin-top: 4px;
+  line-height: 1.7;
+}
+
+/* ---- Rule ---- */
+.inv-rule {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 14px 0;
+}
+
+/* ---- Parties ---- */
+.inv-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin: 20px 0;
+}
+
+.party-col {}
+
+.party-label {
+  font-size: 7.5pt;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+.party-name {
+  font-size: 12pt;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 5px;
+  line-height: 1.25;
+}
+
+.party-detail {
+  font-size: 9.5pt;
+  color: #555;
+  line-height: 1.7;
+}
+.party-detail span { font-weight: 500; color: #333; }
+
+/* ---- Table ---- */
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  font-size: 9.5pt;
+}
+
+.inv-table thead tr {
+  border-bottom: 2px solid #1a1a1a;
+}
+
+.inv-table thead th {
+  padding: 8px 8px 8px 0;
+  text-align: left;
+  font-weight: 600;
+  font-size: 8.5pt;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #333;
+}
+.inv-table thead th.text-right { text-align: right; padding-right: 0; }
+
+.inv-table tbody tr { border-bottom: 1px solid #ececec; }
+.inv-table tbody tr:last-child { border-bottom: 1px solid #1a1a1a; }
+
+.inv-table tbody td {
+  padding: 9px 8px 9px 0;
+  vertical-align: middle;
+  color: #222;
+}
+.inv-table tbody td.text-right  { text-align: right; padding-right: 0; }
+.inv-table tbody td.text-center { text-align: center; }
+.inv-table tbody td.muted { color: #999; }
+.inv-table tbody td strong { font-weight: 600; }
+
+/* ---- Totals ---- */
+.inv-totals-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin: 12px 0 28px;
+}
+
+.inv-totals {
+  width: 240px;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #ececec;
+  font-size: 9.5pt;
+}
+.totals-row:last-child { border-bottom: none; }
+.t-label { color: #666; }
+.t-value { font-weight: 500; color: #1a1a1a; }
+
+.totals-row.grand {
+  border-top: 2px solid #1a1a1a;
+  border-bottom: none;
+  padding: 10px 0 4px;
+  margin-top: 4px;
+}
+.totals-row.grand .t-label { color: #1a1a1a; font-weight: 700; font-size: 11pt; }
+.totals-row.grand .t-value { color: #1a1a1a; font-weight: 700; font-size: 11pt; }
+
+/* ---- Footer ---- */
+.inv-footer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 32px;
+  padding-top: 16px;
+}
+
+.footer-heading {
+  font-size: 7.5pt;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 8px;
+}
+
+.footer-section p { font-size: 9pt; color: #555; line-height: 1.75; }
+.footer-section .kv { display: flex; gap: 12px; margin-bottom: 3px; font-size: 9pt; }
+.footer-section .kv .k { color: #888; min-width: 85px; }
+.footer-section .kv .v { color: #1a1a1a; font-weight: 500; }
+
+@media print {
+  .invoice-page { padding: 10mm; width: 100%; }
+}
+
+/* Expense & divider rows in totals */
+.expense-row-total { background: #fff7ed; }
+.expense-row-total .t-label { color: #c2410c; }
+.expense-row-total .t-value { color: #c2410c; font-weight: 600; }
+.divider-row { border-bottom: 1px dashed #ddd !important; }
+
+/* Expense items in table */
+.inv-table tbody tr.expense-item td { color: #c2410c; background: #fff7ed; }
+.expense-tag {
+  display: inline-block;
+  font-size: 7pt;
+  font-weight: 700;
+  background: #fed7aa;
+  color: #c2410c;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}

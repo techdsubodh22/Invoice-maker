@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice {{ d.get('invoice_number', '') }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/invoice-' + template + '.css') }}">
+</head>
+<body>
+
+{% set gst = d.get('gst_mode', False) %}
+{% set show_bank = d.get('show_bank', False) %}
+{% set show_notes = d.get('show_notes', False) and d.get('notes') %}
+
+{# ============================================================
+   CLASSIC TEMPLATE
+   ============================================================ #}
+{% if template == 'classic' %}
+<div class="invoice-page">
+
+  <div class="inv-header">
+    <div class="inv-title-block">
+      <div class="inv-title">INVOICE</div>
+      {% if d.get('consultant_name') %}<div class="inv-issuer">{{ d.get('consultant_name') }}</div>{% endif %}
+    </div>
+    <div class="inv-meta">
+      <div class="meta-row"><span>Invoice No</span><strong>{{ d.get('invoice_number', '') }}</strong></div>
+      <div class="meta-row"><span>Date</span><strong>{{ d.get('invoice_date', '') }}</strong></div>
+      {% if d.get('due_date') %}<div class="meta-row"><span>Due Date</span><strong>{{ d.get('due_date') }}</strong></div>{% endif %}
+      {% if gst and d.get('place_of_supply') %}<div class="meta-row"><span>Place of Supply</span><strong>{{ d.get('place_of_supply') }}</strong></div>{% endif %}
+    </div>
+  </div>
+
+  <div class="inv-parties">
+    <div class="party-col party-from">
+      <div class="party-label">From</div>
+      <div class="party-name">{{ d.get('consultant_name', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('consultant_address') %}{{ d.get('consultant_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('consultant_phone') %}{{ d.get('consultant_phone') }}<br>{% endif %}
+        {% if d.get('consultant_email') %}{{ d.get('consultant_email') }}<br>{% endif %}
+        {% if d.get('consultant_pan') %}<span>PAN:</span> {{ d.get('consultant_pan') }}<br>{% endif %}
+        {% if gst and d.get('consultant_gstin') %}<span>GSTIN:</span> {{ d.get('consultant_gstin') }}{% endif %}
+      </div>
+    </div>
+    <div class="party-col party-to">
+      <div class="party-label">Bill To</div>
+      <div class="party-name">{{ d.get('client_company', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('client_address') %}{{ d.get('client_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('client_contact') %}<span>Attn:</span> {{ d.get('client_contact') }}<br>{% endif %}
+        {% if gst and d.get('client_gstin') %}<span>GSTIN:</span> {{ d.get('client_gstin') }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th style="width:32px">#</th>
+        <th>Description of Service</th>
+        {% if gst %}<th style="width:60px">SAC</th>{% endif %}
+        <th style="width:60px">Unit</th>
+        <th class="text-right" style="width:50px">Qty</th>
+        <th class="text-right" style="width:90px">Rate (₹)</th>
+        <th class="text-right" style="width:100px">Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in d.get('items', []) %}
+      {% set is_exp = item.get('item_type') == 'expense' %}
+      <tr{% if is_exp %} class="expense-item"{% endif %}>
+        <td class="text-center">{{ loop.index }}</td>
+        <td>{% if is_exp %}<span class="expense-tag">Exp</span>{% endif %}{{ item.get('description', '') }}</td>
+        {% if gst %}<td class="text-center">{{ item.get('sac_code', '') if not is_exp else '—' }}</td>{% endif %}
+        <td class="text-center">{{ item.get('unit', '') }}</td>
+        <td class="text-right">{{ item.get('quantity', '') }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('rate', 0)) }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('amount', 0)) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="inv-totals-wrap">
+    <div class="inv-totals">
+      <div class="totals-row"><span class="t-label">Services</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('services_subtotal', 0)) }}</span></div>
+      {% if d.get('has_expenses') %}
+      <div class="totals-row expense-row-total"><span class="t-label">Reimbursable Expenses</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('expenses_subtotal', 0)) }}</span></div>
+      {% endif %}
+      {% if gst %}
+        <div class="totals-row divider-row"><span class="t-label" style="font-size:8pt;color:#aaa;">GST on services only</span><span></span></div>
+        {% if d.get('gst_type') == 'cgst_sgst' %}
+        <div class="totals-row"><span class="t-label">CGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('cgst', 0)) }}</span></div>
+        <div class="totals-row"><span class="t-label">SGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('sgst', 0)) }}</span></div>
+        {% else %}
+        <div class="totals-row"><span class="t-label">IGST (18%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('igst', 0)) }}</span></div>
+        {% endif %}
+        <div class="totals-row"><span class="t-label">Total Tax</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('total_gst', 0)) }}</span></div>
+      {% endif %}
+      <div class="totals-row grand"><span class="t-label">Grand Total</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('grand_total', 0)) }}</span></div>
+    </div>
+  </div>
+
+  {% if show_bank or show_notes %}
+  <div class="inv-footer">
+    {% if show_bank %}
+    <div class="footer-section">
+      <div class="footer-heading">Payment Details</div>
+      {% if d.get('bank_name') %}<div class="kv"><span class="k">Bank</span><span class="v">{{ d.get('bank_name') }}</span></div>{% endif %}
+      {% if d.get('account_number') %}<div class="kv"><span class="k">Account No</span><span class="v">{{ d.get('account_number') }}</span></div>{% endif %}
+      {% if d.get('ifsc_code') %}<div class="kv"><span class="k">IFSC</span><span class="v">{{ d.get('ifsc_code') }}</span></div>{% endif %}
+      {% if d.get('account_type') %}<div class="kv"><span class="k">Account Type</span><span class="v">{{ d.get('account_type') }}</span></div>{% endif %}
+    </div>
+    {% endif %}
+    {% if show_notes %}
+    <div class="footer-section">
+      <div class="footer-heading">Notes &amp; Terms</div>
+      <p>{{ d.get('notes', '')|replace('\n','<br>')|safe }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+
+{# ============================================================
+   MODERN TEMPLATE
+   ============================================================ #}
+{% if template == 'modern' %}
+<div class="invoice-page">
+
+  <div class="inv-header">
+    <div class="inv-header-left">
+      <div class="inv-title">INVOICE</div>
+      {% if d.get('consultant_name') %}<div class="inv-subtitle">{{ d.get('consultant_name') }}</div>{% endif %}
+    </div>
+    <div class="inv-header-right">
+      <div class="inv-number">{{ d.get('invoice_number', '') }}</div>
+      <div class="inv-meta-grid">
+        <span class="ml">Issued</span><span>{{ d.get('invoice_date', '') }}</span>
+        {% if d.get('due_date') %}<span class="ml">Due</span><span>{{ d.get('due_date') }}</span>{% endif %}
+        {% if gst and d.get('place_of_supply') %}<span class="ml">Supply</span><span>{{ d.get('place_of_supply') }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-parties">
+    <div class="party-col party-from">
+      <div class="party-label">From</div>
+      <div class="party-name">{{ d.get('consultant_name', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('consultant_address') %}{{ d.get('consultant_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('consultant_phone') %}{{ d.get('consultant_phone') }}<br>{% endif %}
+        {% if d.get('consultant_email') %}{{ d.get('consultant_email') }}<br>{% endif %}
+        {% if d.get('consultant_pan') %}<span>PAN:</span> {{ d.get('consultant_pan') }}<br>{% endif %}
+        {% if gst and d.get('consultant_gstin') %}<span>GSTIN:</span> {{ d.get('consultant_gstin') }}{% endif %}
+      </div>
+    </div>
+    <div class="party-col party-to">
+      <div class="party-label">Bill To</div>
+      <div class="party-name">{{ d.get('client_company', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('client_address') %}{{ d.get('client_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('client_contact') %}<span>Attn:</span> {{ d.get('client_contact') }}<br>{% endif %}
+        {% if gst and d.get('client_gstin') %}<span>GSTIN:</span> {{ d.get('client_gstin') }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th style="width:32px">#</th>
+        <th>Description of Service</th>
+        {% if gst %}<th style="width:60px">SAC</th>{% endif %}
+        <th style="width:60px">Unit</th>
+        <th class="text-right" style="width:50px">Qty</th>
+        <th class="text-right" style="width:90px">Rate (₹)</th>
+        <th class="text-right" style="width:100px">Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in d.get('items', []) %}
+      {% set is_exp = item.get('item_type') == 'expense' %}
+      <tr{% if is_exp %} class="expense-item"{% endif %}>
+        <td class="text-center">{{ loop.index }}</td>
+        <td>{% if is_exp %}<span class="expense-tag">Exp</span>{% endif %}{{ item.get('description', '') }}</td>
+        {% if gst %}<td class="text-center">{{ item.get('sac_code', '') if not is_exp else '—' }}</td>{% endif %}
+        <td class="text-center">{{ item.get('unit', '') }}</td>
+        <td class="text-right">{{ item.get('quantity', '') }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('rate', 0)) }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('amount', 0)) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="inv-totals-wrap">
+    <div class="inv-totals">
+      <div class="totals-row"><span class="t-label">Services</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('services_subtotal', 0)) }}</span></div>
+      {% if d.get('has_expenses') %}
+      <div class="totals-row expense-row-total"><span class="t-label">Reimbursable Expenses</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('expenses_subtotal', 0)) }}</span></div>
+      {% endif %}
+      {% if gst %}
+        <div class="totals-row divider-row"><span class="t-label" style="font-size:8pt;color:#aaa;">GST on services only</span><span></span></div>
+        {% if d.get('gst_type') == 'cgst_sgst' %}
+        <div class="totals-row"><span class="t-label">CGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('cgst', 0)) }}</span></div>
+        <div class="totals-row"><span class="t-label">SGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('sgst', 0)) }}</span></div>
+        {% else %}
+        <div class="totals-row"><span class="t-label">IGST (18%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('igst', 0)) }}</span></div>
+        {% endif %}
+        <div class="totals-row"><span class="t-label">Total Tax</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('total_gst', 0)) }}</span></div>
+      {% endif %}
+      <div class="totals-row grand"><span class="t-label">Grand Total</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('grand_total', 0)) }}</span></div>
+    </div>
+  </div>
+
+  {% if show_bank or show_notes %}
+  <div class="inv-footer">
+    {% if show_bank %}
+    <div class="footer-section">
+      <div class="footer-heading">Payment Details</div>
+      {% if d.get('bank_name') %}<div class="kv"><span class="k">Bank</span><span class="v">{{ d.get('bank_name') }}</span></div>{% endif %}
+      {% if d.get('account_number') %}<div class="kv"><span class="k">Account No</span><span class="v">{{ d.get('account_number') }}</span></div>{% endif %}
+      {% if d.get('ifsc_code') %}<div class="kv"><span class="k">IFSC</span><span class="v">{{ d.get('ifsc_code') }}</span></div>{% endif %}
+      {% if d.get('account_type') %}<div class="kv"><span class="k">Account Type</span><span class="v">{{ d.get('account_type') }}</span></div>{% endif %}
+    </div>
+    {% endif %}
+    {% if show_notes %}
+    <div class="footer-section">
+      <div class="footer-heading">Notes &amp; Terms</div>
+      <p>{{ d.get('notes', '')|replace('\n','<br>')|safe }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+
+{# ============================================================
+   MINIMAL TEMPLATE
+   ============================================================ #}
+{% if template == 'minimal' %}
+<div class="invoice-page">
+
+  <div class="inv-header">
+    <div class="inv-header-left">
+      <div class="inv-title">Invoice</div>
+      {% if d.get('consultant_name') %}<div class="inv-issuer">{{ d.get('consultant_name') }}</div>{% endif %}
+    </div>
+    <div class="inv-header-right">
+      <div class="inv-number">{{ d.get('invoice_number', '') }}</div>
+      <div class="inv-dates">
+        Issued {{ d.get('invoice_date', '') }}
+        {% if d.get('due_date') %} &nbsp;·&nbsp; Due {{ d.get('due_date') }}{% endif %}
+        {% if gst and d.get('place_of_supply') %}<br>Place of Supply: {{ d.get('place_of_supply') }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-rule"></div>
+
+  <div class="inv-parties">
+    <div class="party-col party-from">
+      <div class="party-label">From</div>
+      <div class="party-name">{{ d.get('consultant_name', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('consultant_address') %}{{ d.get('consultant_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('consultant_phone') %}{{ d.get('consultant_phone') }}<br>{% endif %}
+        {% if d.get('consultant_email') %}{{ d.get('consultant_email') }}<br>{% endif %}
+        {% if d.get('consultant_pan') %}PAN: {{ d.get('consultant_pan') }}<br>{% endif %}
+        {% if gst and d.get('consultant_gstin') %}GSTIN: {{ d.get('consultant_gstin') }}{% endif %}
+      </div>
+    </div>
+    <div class="party-col party-to">
+      <div class="party-label">Bill To</div>
+      <div class="party-name">{{ d.get('client_company', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('client_address') %}{{ d.get('client_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('client_contact') %}Attn: {{ d.get('client_contact') }}<br>{% endif %}
+        {% if gst and d.get('client_gstin') %}GSTIN: {{ d.get('client_gstin') }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="inv-rule"></div>
+
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th style="width:32px">#</th>
+        <th>Description</th>
+        {% if gst %}<th style="width:60px">SAC</th>{% endif %}
+        <th style="width:60px">Unit</th>
+        <th class="text-right" style="width:50px">Qty</th>
+        <th class="text-right" style="width:90px">Rate (₹)</th>
+        <th class="text-right" style="width:100px">Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in d.get('items', []) %}
+      <tr>
+        <td class="text-center muted">{{ loop.index }}</td>
+        <td>{{ item.get('description', '') }}</td>
+        {% if gst %}<td class="text-center">{{ item.get('sac_code', '') }}</td>{% endif %}
+        <td class="text-center muted">{{ item.get('unit', '') }}</td>
+        <td class="text-right">{{ item.get('quantity', '') }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('rate', 0)) }}</td>
+        <td class="text-right"><strong>{{ '{:,.2f}'.format(item.get('amount', 0)) }}</strong></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="inv-totals-wrap">
+    <div class="inv-totals">
+      <div class="totals-row"><span class="t-label">Subtotal</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('subtotal', 0)) }}</span></div>
+      {% if gst %}
+        {% if d.get('gst_type') == 'cgst_sgst' %}
+        <div class="totals-row"><span class="t-label">CGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('cgst', 0)) }}</span></div>
+        <div class="totals-row"><span class="t-label">SGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('sgst', 0)) }}</span></div>
+        {% else %}
+        <div class="totals-row"><span class="t-label">IGST (18%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('igst', 0)) }}</span></div>
+        {% endif %}
+        <div class="totals-row"><span class="t-label">Total Tax</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('total_gst', 0)) }}</span></div>
+      {% endif %}
+      <div class="totals-row grand"><span class="t-label">Total Due</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('grand_total', 0)) }}</span></div>
+    </div>
+  </div>
+
+  {% if show_bank or show_notes %}
+  <div class="inv-rule"></div>
+  <div class="inv-footer">
+    {% if show_bank %}
+    <div class="footer-section">
+      <div class="footer-heading">Payment Details</div>
+      {% if d.get('bank_name') %}<div class="kv"><span class="k">Bank</span><span class="v">{{ d.get('bank_name') }}</span></div>{% endif %}
+      {% if d.get('account_number') %}<div class="kv"><span class="k">Account No</span><span class="v">{{ d.get('account_number') }}</span></div>{% endif %}
+      {% if d.get('ifsc_code') %}<div class="kv"><span class="k">IFSC</span><span class="v">{{ d.get('ifsc_code') }}</span></div>{% endif %}
+      {% if d.get('account_type') %}<div class="kv"><span class="k">Type</span><span class="v">{{ d.get('account_type') }}</span></div>{% endif %}
+    </div>
+    {% endif %}
+    {% if show_notes %}
+    <div class="footer-section">
+      <div class="footer-heading">Notes</div>
+      <p>{{ d.get('notes', '')|replace('\n','<br>')|safe }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+
+{# ============================================================
+   CORPORATE TEMPLATE
+   ============================================================ #}
+{% if template == 'corporate' %}
+<div class="invoice-page">
+
+  <div class="inv-header">
+    <div class="inv-header-left">
+      <div class="inv-title">INVOICE</div>
+      {% if d.get('consultant_name') %}<div class="inv-subtitle">{{ d.get('consultant_name') }}</div>{% endif %}
+    </div>
+    <div class="inv-header-right">
+      <div class="inv-number">{{ d.get('invoice_number', '') }}</div>
+      <div class="inv-meta-grid">
+        <span>Invoice Date</span><span>{{ d.get('invoice_date', '') }}</span>
+        {% if d.get('due_date') %}<span>Payment Due</span><span>{{ d.get('due_date') }}</span>{% endif %}
+        {% if gst and d.get('place_of_supply') %}<span>Place of Supply</span><span>{{ d.get('place_of_supply') }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="inv-header-accent"></div>
+  </div>
+
+  <div class="inv-parties">
+    <div class="party-col party-from">
+      <div class="party-label">From</div>
+      <div class="party-name">{{ d.get('consultant_name', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('consultant_address') %}{{ d.get('consultant_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('consultant_phone') %}{{ d.get('consultant_phone') }}<br>{% endif %}
+        {% if d.get('consultant_email') %}{{ d.get('consultant_email') }}<br>{% endif %}
+        {% if d.get('consultant_pan') %}<span>PAN:</span> {{ d.get('consultant_pan') }}<br>{% endif %}
+        {% if gst and d.get('consultant_gstin') %}<span>GSTIN:</span> {{ d.get('consultant_gstin') }}{% endif %}
+      </div>
+    </div>
+    <div class="party-col party-to">
+      <div class="party-label">Bill To</div>
+      <div class="party-name">{{ d.get('client_company', '') }}</div>
+      <div class="party-detail">
+        {% if d.get('client_address') %}{{ d.get('client_address')|replace('\n','<br>')|safe }}<br>{% endif %}
+        {% if d.get('client_contact') %}<span>Attn:</span> {{ d.get('client_contact') }}<br>{% endif %}
+        {% if gst and d.get('client_gstin') %}<span>GSTIN:</span> {{ d.get('client_gstin') }}{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th style="width:32px">#</th>
+        <th>Description of Service</th>
+        {% if gst %}<th style="width:60px">SAC</th>{% endif %}
+        <th style="width:60px">Unit</th>
+        <th class="text-right" style="width:50px">Qty</th>
+        <th class="text-right" style="width:90px">Rate (₹)</th>
+        <th class="text-right" style="width:100px">Amount (₹)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in d.get('items', []) %}
+      {% set is_exp = item.get('item_type') == 'expense' %}
+      <tr{% if is_exp %} class="expense-item"{% endif %}>
+        <td class="text-center">{{ loop.index }}</td>
+        <td>{% if is_exp %}<span class="expense-tag">Exp</span>{% endif %}{{ item.get('description', '') }}</td>
+        {% if gst %}<td class="text-center">{{ item.get('sac_code', '') if not is_exp else '—' }}</td>{% endif %}
+        <td class="text-center">{{ item.get('unit', '') }}</td>
+        <td class="text-right">{{ item.get('quantity', '') }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('rate', 0)) }}</td>
+        <td class="text-right">{{ '{:,.2f}'.format(item.get('amount', 0)) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="inv-totals-wrap">
+    <div class="inv-totals">
+      <div class="totals-row"><span class="t-label">Services</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('services_subtotal', 0)) }}</span></div>
+      {% if d.get('has_expenses') %}
+      <div class="totals-row expense-row-total"><span class="t-label">Reimbursable Expenses</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('expenses_subtotal', 0)) }}</span></div>
+      {% endif %}
+      {% if gst %}
+        <div class="totals-row divider-row"><span class="t-label" style="font-size:8pt;color:#aaa;">GST on services only</span><span></span></div>
+        {% if d.get('gst_type') == 'cgst_sgst' %}
+        <div class="totals-row"><span class="t-label">CGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('cgst', 0)) }}</span></div>
+        <div class="totals-row"><span class="t-label">SGST (9%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('sgst', 0)) }}</span></div>
+        {% else %}
+        <div class="totals-row"><span class="t-label">IGST (18%)</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('igst', 0)) }}</span></div>
+        {% endif %}
+        <div class="totals-row"><span class="t-label">Total Tax</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('total_gst', 0)) }}</span></div>
+      {% endif %}
+      <div class="totals-row grand"><span class="t-label">Grand Total</span><span class="t-value">₹{{ '{:,.2f}'.format(d.get('grand_total', 0)) }}</span></div>
+    </div>
+  </div>
+
+  {% if show_bank or show_notes %}
+  <div class="inv-footer">
+    {% if show_bank %}
+    <div class="footer-section">
+      <div class="footer-heading">Payment Details</div>
+      {% if d.get('bank_name') %}<div class="kv"><span class="k">Bank</span><span class="v">{{ d.get('bank_name') }}</span></div>{% endif %}
+      {% if d.get('account_number') %}<div class="kv"><span class="k">Account No</span><span class="v">{{ d.get('account_number') }}</span></div>{% endif %}
+      {% if d.get('ifsc_code') %}<div class="kv"><span class="k">IFSC</span><span class="v">{{ d.get('ifsc_code') }}</span></div>{% endif %}
+      {% if d.get('account_type') %}<div class="kv"><span class="k">Account Type</span><span class="v">{{ d.get('account_type') }}</span></div>{% endif %}
+    </div>
+    {% endif %}
+    {% if show_notes %}
+    <div class="footer-section">
+      <div class="footer-heading">Notes &amp; Terms</div>
+      <p>{{ d.get('notes', '')|replace('\n','<br>')|safe }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endif %}
+
+</body>
+</html>
