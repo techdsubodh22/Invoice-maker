@@ -131,9 +131,9 @@ def preview():
 @app.route("/export/pdf", methods=["POST"])
 def export_pdf():
     try:
-        from weasyprint import HTML, CSS
+        from xhtml2pdf import pisa
     except ImportError:
-        abort(500, "weasyprint is not installed. Run: pip install weasyprint")
+        abort(500, "xhtml2pdf is not installed. Run: pip install xhtml2pdf")
 
     data = request.get_json(force=True)
     data = _sanitize(data)
@@ -147,8 +147,12 @@ def export_pdf():
         data["invoice_number"] = _next_invoice_number()
 
     html_string = render_template("preview.html", d=data, template=template_name)
-    base_url = request.host_url
-    pdf_bytes = HTML(string=html_string, base_url=base_url).write_pdf()
+
+    pdf_buffer = io.BytesIO()
+    pisa_status = pisa.CreatePDF(html_string, dest=pdf_buffer)
+    if pisa_status.err:
+        abort(500, "PDF generation failed")
+    pdf_bytes = pdf_buffer.getvalue()
 
     inv_num = re.sub(r'[^A-Za-z0-9_-]', '_', data.get("invoice_number", "invoice"))
     filename = f"{inv_num}.pdf"
