@@ -129,13 +129,10 @@ def preview():
 
 
 def _inline_css_html(html_string, template_name):
-    """Replace the <link> stylesheet tag with an inlined <style> block.
-    Also strips Google Fonts @import so weasyprint doesn't need internet access."""
+    """Replace the <link> stylesheet tag with an inlined <style> block."""
     css_path = os.path.join(app.static_folder, 'css', f'invoice-{template_name}.css')
     with open(css_path, 'r', encoding='utf-8') as f:
         css_content = f.read()
-    # Remove Google Fonts imports (fail gracefully without internet)
-    css_content = re.sub(r'@import\s+url\([^)]+\);\s*', '', css_content)
     html_string = re.sub(
         r'<link[^>]+invoice-[^.]+\.css[^>]*>',
         f'<style>{css_content}</style>',
@@ -144,13 +141,20 @@ def _inline_css_html(html_string, template_name):
     return html_string
 
 
+def _html_to_pdf(html_string):
+    """Render HTML to PDF bytes using headless Chromium via Playwright."""
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.set_content(html_string, wait_until='networkidle')
+        pdf_bytes = page.pdf(format='A4', print_background=True)
+        browser.close()
+    return pdf_bytes
+
+
 @app.route("/export/pdf", methods=["POST"])
 def export_pdf():
-    try:
-        from weasyprint import HTML
-    except ImportError:
-        abort(500, "weasyprint is not installed. Run: pip install weasyprint")
-
     data = request.get_json(force=True)
     data = _sanitize(data)
     template_name = data.get("template", "classic")
@@ -163,8 +167,7 @@ def export_pdf():
 
     html_string = render_template("preview.html", d=data, template=template_name)
     html_string = _inline_css_html(html_string, template_name)
-
-    pdf_bytes = HTML(string=html_string).write_pdf()
+    pdf_bytes = _html_to_pdf(html_string)
 
     inv_num = re.sub(r'[^A-Za-z0-9_-]', '_', data.get("invoice_number", "invoice"))
     filename = f"{inv_num}.pdf"
@@ -179,10 +182,9 @@ def export_pdf():
 @app.route("/export/docx", methods=["POST"])
 def export_docx():
     try:
-        from weasyprint import HTML
         from pdf2docx import Converter
     except ImportError:
-        abort(500, "Required packages missing. Run: pip install weasyprint pdf2docx")
+        abort(500, "pdf2docx is not installed. Run: pip install pdf2docx")
 
     import tempfile
 
@@ -198,8 +200,7 @@ def export_docx():
 
     html_string = render_template("preview.html", d=data, template=template_name)
     html_string = _inline_css_html(html_string, template_name)
-
-    pdf_bytes = HTML(string=html_string).write_pdf()
+    pdf_bytes = _html_to_pdf(html_string)
 
     pdf_fd, pdf_path = tempfile.mkstemp(suffix='.pdf')
     docx_fd, docx_path = tempfile.mkstemp(suffix='.docx')
