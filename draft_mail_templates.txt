@@ -1,0 +1,81 @@
+==============================================================
+DRAFT MAIL TEMPLATES — Invoice Maker
+==============================================================
+
+--------------------------------------------------------------
+TEMPLATE 1 — Standard Invoice Submission
+--------------------------------------------------------------
+Subject: Invoice #[INV-001] — Consulting Services for [Month Year]
+
+Dear [Client Name / HR / Accounts Team],
+
+Please find attached Invoice #[INV-001] for consulting services rendered during [Month Year].
+
+Invoice Details:
+  Invoice Number : [INV-001]
+  Invoice Date   : [DD MMM YYYY]
+  Due Date       : [DD MMM YYYY]
+  Amount Due     : ₹[XX,XXX.00]
+
+Kindly process the payment by the due date via bank transfer to the account details mentioned in the invoice.
+
+Please feel free to reach out if you have any questions or require additional information.
+
+Thank you for the continued association.
+
+Warm regards,
+[Your Full Name]
+[Your Phone Number]
+[Your Email Address]
+
+
+--------------------------------------------------------------
+TEMPLATE 2 — Follow-up / Payment Reminder
+--------------------------------------------------------------
+Subject: Reminder: Invoice #[INV-001] Payment Due on [DD MMM YYYY]
+
+Dear [Client Name / Accounts Team],
+
+I hope you are doing well.
+
+This is a gentle reminder that Invoice #[INV-001] amounting to ₹[XX,XXX.00], submitted on [Invoice Date], is due for payment on [Due Date].
+
+If the payment has already been processed, please disregard this message and share the transaction reference at your convenience.
+
+In case you need a copy of the invoice or any clarification, I am happy to assist.
+
+Thank you for your prompt attention.
+
+Best regards,
+[Your Full Name]
+[Your Phone Number]
+[Your Email Address]
+
+
+--------------------------------------------------------------
+TEMPLATE 3 — End of Project / Final Invoice
+--------------------------------------------------------------
+Subject: Final Invoice #[INV-001] — [Project Name] Engagement
+
+Dear [Client Name],
+
+It has been a pleasure working with [Client Company] on [Project Name].
+
+Please find attached the final invoice for services rendered from [Start Date] to [End Date].
+
+Invoice Details:
+  Invoice Number : [INV-001]
+  Invoice Date   : [DD MMM YYYY]
+  Due Date       : [DD MMM YYYY]
+  Amount Due     : ₹[XX,XXX.00]
+
+I look forward to the opportunity to collaborate again in the future. Please do not hesitate to reach out for any queries regarding this invoice.
+
+Thank you for a great engagement!
+
+Warm regards,
+[Your Full Name]
+[Your Phone Number]
+[Your Email Address]
+
+==============================================================

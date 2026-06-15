@@ -308,6 +308,35 @@
         </div>
       </div>
 
+      <!-- Draft Mail (optional toggle) -->
+      <div class="form-section optional-section" id="draft-mail-section">
+        <div class="form-section-title optional-title" onclick="toggleSection('draft-mail')">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            Draft Mail
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+            <span class="optional-badge" id="draft-mail-badge">Off</span>
+            <label class="toggle-switch small-toggle" onclick="event.stopPropagation()">
+              <input type="checkbox" id="draft-mail-toggle" onchange="handleSectionToggle('draft-mail'); schedulePreview()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="optional-body" id="draft-mail-body" style="display:none;">
+          <div class="form-group">
+            <label>Mail Subject</label>
+            <input type="text" id="draft_mail_subject" placeholder="Invoice #001 — Consulting Services for June 2026" oninput="schedulePreview()">
+          </div>
+          <div class="form-group">
+            <label>Mail Body</label>
+            <textarea id="draft_mail_body" placeholder="Dear [Client Name],&#10;&#10;Please find attached Invoice #001 for consulting services rendered during June 2026.&#10;&#10;Amount Due: ₹XX,XXX&#10;Due Date: DD MMM YYYY&#10;&#10;Kindly process the payment at your earliest convenience.&#10;&#10;Regards,&#10;[Your Name]" rows="10" oninput="schedulePreview()"></textarea>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /form-body -->
   </div><!-- /form-panel -->
 

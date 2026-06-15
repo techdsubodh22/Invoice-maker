@@ -9,6 +9,7 @@ let currentTemplate = 'classic';
 let gstMode = false;
 let bankEnabled = false;
 let notesEnabled = false;
+let draftMailEnabled = false;
 let previewTimer = null;
 let itemCounter = 0;
 
@@ -102,8 +103,9 @@ function handleSectionToggle(name) {
     badge.classList.remove('on');
   }
 
-  if (name === 'bank')  bankEnabled  = enabled;
-  if (name === 'notes') notesEnabled = enabled;
+  if (name === 'bank')       bankEnabled      = enabled;
+  if (name === 'notes')     notesEnabled     = enabled;
+  if (name === 'draft-mail') draftMailEnabled = enabled;
 }
 
 // ---- Line Items ----
@@ -260,8 +262,9 @@ function collectFormData() {
     });
   });
 
-  const bankOn  = document.getElementById('bank-toggle')?.checked  || false;
-  const notesOn = document.getElementById('notes-toggle')?.checked || false;
+  const bankOn       = document.getElementById('bank-toggle')?.checked       || false;
+  const notesOn      = document.getElementById('notes-toggle')?.checked      || false;
+  const draftMailOn  = document.getElementById('draft-mail-toggle')?.checked || false;
 
   return {
     template:  currentTemplate,
@@ -295,6 +298,11 @@ function collectFormData() {
     // Notes — only send if enabled
     show_notes: notesOn,
     notes:      notesOn ? (document.getElementById('notes')?.value || '') : '',
+
+    // Draft Mail — only send if enabled
+    show_draft_mail:    draftMailOn,
+    draft_mail_subject: draftMailOn ? (document.getElementById('draft_mail_subject')?.value || '') : '',
+    draft_mail_body:    draftMailOn ? (document.getElementById('draft_mail_body')?.value    || '') : '',
 
     items: items,
   };
