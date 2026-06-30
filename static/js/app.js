@@ -107,7 +107,14 @@ function handleSectionToggle(name) {
   if (name === 'notes')     notesEnabled     = enabled;
   if (name === 'draft-mail') {
     draftMailEnabled = enabled;
-    if (enabled) populateDraftMail();
+    if (enabled) {
+      populateDraftMail();
+    } else {
+      const subjectEl = document.getElementById('draft_mail_subject');
+      const bodyEl    = document.getElementById('draft_mail_body');
+      if (subjectEl) subjectEl.value = '';
+      if (bodyEl)    bodyEl.value    = '';
+    }
   }
 }
 
