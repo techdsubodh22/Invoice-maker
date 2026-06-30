@@ -15,17 +15,55 @@ let itemCounter = 0;
 
 // ---- Init ----
 document.addEventListener('DOMContentLoaded', () => {
-  // Default due date (30 days from today)
-  const today = new Date();
-  const due = new Date(today);
-  due.setDate(due.getDate() + 30);
-  document.getElementById('due_date').value = due.toISOString().split('T')[0];
+  // ---- Default invoice details ----
+  function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  setVal('invoice_number',      'Jun-INV-2026-003');
+  setVal('invoice_date',        '2026-06-29');
+  setVal('due_date',            '2026-06-30');
+
+  setVal('consultant_name',     'Subodh Deshmukh');
+  setVal('consultant_address',  '104, neeraj apartment,\nnear dutta mandir vadavali section\nabove bank of baroda bank');
+  setVal('consultant_phone',    '+919096759408');
+  setVal('consultant_email',    'dsubodh22@gmail.com');
+  setVal('consultant_pan',      'BMZPD0976L');
+
+  setVal('client_company',      'TechSwing Solutions Pvt Ltd');
+  setVal('client_address',      'No-19 Raja Nagar, Sarfoji College PO,');
+  setVal('client_contact',      'TechSwing Solutions Pvt Ltd');
 
   // Track manual edits on invoice number
   const invEl = document.getElementById('invoice_number');
   if (invEl) invEl.addEventListener('input', () => { invEl.dataset.userEdited = 'true'; });
 
-  addLineItem();
+  // ---- Default line items ----
+  function addDefaultLineItem(description, unit, quantity, rate) {
+    const container = document.getElementById('line-items-container');
+    const id = ++itemCounter;
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+    row.dataset.id = id;
+    row.innerHTML = buildLineItemHTML(id);
+    container.appendChild(row);
+
+    const desc = row.querySelector('[data-field="description"]');
+    const unitSel = row.querySelector('[data-field="unit"]');
+    const qtyIn  = row.querySelector('[data-field="quantity"]');
+    const rateIn = row.querySelector('[data-field="rate"]');
+    if (desc)    desc.value    = description;
+    if (unitSel) unitSel.value = unit;
+    if (qtyIn)   qtyIn.value  = quantity;
+    if (rateIn)  rateIn.value  = rate;
+    // trigger amount display
+    if (qtyIn) calcRow(qtyIn);
+  }
+
+  addDefaultLineItem('Software Architecture & Design Consultation', 'Days', 21, 3000);
+  addDefaultLineItem('Software Development Services',               'Days', 21, 7000);
+
   schedulePreview();
 });
 
