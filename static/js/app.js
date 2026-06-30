@@ -105,7 +105,73 @@ function handleSectionToggle(name) {
 
   if (name === 'bank')       bankEnabled      = enabled;
   if (name === 'notes')     notesEnabled     = enabled;
-  if (name === 'draft-mail') draftMailEnabled = enabled;
+  if (name === 'draft-mail') {
+    draftMailEnabled = enabled;
+    if (enabled) populateDraftMail();
+  }
+}
+
+function populateDraftMail() {
+  const invoiceNum     = document.getElementById('invoice_number')?.value  || '';
+  const clientCompany  = document.getElementById('client_company')?.value  || '';
+  const clientContact  = document.getElementById('client_contact')?.value  || '';
+  const consultantName = document.getElementById('consultant_name')?.value || '';
+  const dueDateRaw     = document.getElementById('due_date')?.value        || '';
+  const invoiceDateRaw = document.getElementById('invoice_date')?.value    || '';
+
+  // Format a date string (YYYY-MM-DD) to "DD MMM YYYY"
+  function fmtDate(raw) {
+    if (!raw) return '';
+    const d = new Date(raw + 'T00:00:00');
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // Compute grand total from line items
+  let total = 0;
+  document.querySelectorAll('.line-item-row').forEach(row => {
+    const qty  = parseFloat(row.querySelector('[data-field="quantity"]')?.value || 0);
+    const rate = parseFloat(row.querySelector('[data-field="rate"]')?.value     || 0);
+    if (!isNaN(qty) && !isNaN(rate)) total += qty * rate;
+  });
+  const totalStr = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Derive period label from invoice date month/year
+  let periodLabel = '';
+  if (invoiceDateRaw) {
+    const d = new Date(invoiceDateRaw + 'T00:00:00');
+    periodLabel = d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  }
+
+  const subjectEl = document.getElementById('draft_mail_subject');
+  const bodyEl    = document.getElementById('draft_mail_body');
+
+  // Only auto-fill if fields are empty (don't overwrite user edits)
+  if (subjectEl && !subjectEl.value.trim()) {
+    const parts = ['Invoice'];
+    if (invoiceNum) parts.push('#' + invoiceNum);
+    if (periodLabel) parts.push('— Consulting Services for ' + periodLabel);
+    subjectEl.value = parts.join(' ');
+  }
+
+  if (bodyEl && !bodyEl.value.trim()) {
+    const greeting = clientContact ? `Dear ${clientContact},` : (clientCompany ? `Dear ${clientCompany} Team,` : 'Dear Sir/Madam,');
+    const invRef   = invoiceNum ? `Invoice #${invoiceNum}` : 'the invoice';
+    const period   = periodLabel ? ` for consulting services rendered during ${periodLabel}` : '';
+    const dueStr   = dueDateRaw ? `\nDue Date: ${fmtDate(dueDateRaw)}` : '';
+    const regards  = consultantName ? consultantName : 'Your Name';
+
+    bodyEl.value =
+`${greeting}
+
+Please find attached ${invRef}${period}.
+
+Amount Due: ${totalStr}${dueStr}
+
+Kindly process the payment at your earliest convenience.
+
+Regards,
+${regards}`;
+  }
 }
 
 // ---- Line Items ----
