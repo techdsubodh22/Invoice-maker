@@ -21,9 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.value = val;
   }
 
-  setVal('invoice_number',      'Jun-INV-2026-003');
-  setVal('invoice_date',        '2026-06-29');
-  setVal('due_date',            '2026-06-30');
+  const today = new Date();
+  const monthAbbr = today.toLocaleDateString('en-IN', { month: 'short' }); // e.g. "Jun"
+  const year      = today.getFullYear();
+  const todayISO  = today.toISOString().split('T')[0];
+  const due = new Date(today);
+  due.setDate(due.getDate() + 30);
+  const dueISO = due.toISOString().split('T')[0];
+
+  setVal('invoice_number', `${monthAbbr}-INV-${year}-003`);
+  setVal('invoice_date',   todayISO);
+  setVal('due_date',       dueISO);
 
   setVal('consultant_name',     'Subodh Deshmukh');
   setVal('consultant_address',  '104, neeraj apartment,\nnear dutta mandir vadavali section\nabove bank of baroda bank');
