@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const year      = today.getFullYear();
   const todayISO  = today.toISOString().split('T')[0];
   const due = new Date(today);
-  due.setDate(due.getDate() + 30);
+  due.setDate(due.getDate() + 1);
   const dueISO = due.toISOString().split('T')[0];
 
   setVal('invoice_number', `${monthAbbr}-INV-${year}-003`);
