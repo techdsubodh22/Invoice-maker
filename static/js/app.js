@@ -69,8 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (qtyIn) calcRow(qtyIn);
   }
 
-  addDefaultLineItem('Software Architecture & Design Consultation', 'Days', 21, 3000);
-  addDefaultLineItem('Software Development Services',               'Days', 21, 7000);
+  addDefaultLineItem('Software Architecture & Design Consultation', 'Days', 20, 3000);
+  addDefaultLineItem('Software Development Services',               'Days', 20, 7000);
+  addDefaultLineItem('Testing & Quality Assurance',                 'Days',  3, 3611);
 
   schedulePreview();
 });
