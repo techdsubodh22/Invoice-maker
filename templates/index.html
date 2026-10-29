@@ -141,7 +141,7 @@
           </div>
           <div class="form-group gst-only" id="place_of_supply_wrap">
             <label>Place of Supply</label>
-            <input type="text" id="place_of_supply" placeholder="e.g. Maharashtra" oninput="schedulePreview()">
+            <input type="text" id="place_of_supply" placeholder="Auto-filled from Client GSTIN" oninput="this.dataset.userEdited = 'true'; schedulePreview()">
           </div>
         </div>
         <div class="form-row">
@@ -153,6 +153,13 @@
             <label>Due Date</label>
             <input type="date" id="due_date" oninput="schedulePreview()">
           </div>
+        </div>
+        <div class="form-group gst-only" id="reverse_charge_wrap">
+          <label>Reverse Charge</label>
+          <select id="reverse_charge" onchange="schedulePreview()">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+          </select>
         </div>
       </div>
 
@@ -188,8 +195,9 @@
             <input type="text" id="consultant_pan" placeholder="ABCDE1234F" oninput="schedulePreview()">
           </div>
           <div class="form-group gst-only" id="consultant_gstin_wrap">
-            <label>GSTIN</label>
-            <input type="text" id="consultant_gstin" placeholder="22ABCDE1234F1Z5" oninput="schedulePreview()">
+            <label>Your GSTIN (Supplier)</label>
+            <input type="text" id="consultant_gstin" placeholder="22ABCDE1234F1Z5" maxlength="15" oninput="handleGSTINInput()">
+            <div class="field-hint" id="consultant_gstin_hint"></div>
           </div>
         </div>
       </div>
@@ -216,8 +224,9 @@
             <input type="text" id="client_contact" placeholder="Name" oninput="schedulePreview()">
           </div>
           <div class="form-group gst-only" id="client_gstin_wrap">
-            <label>Client GSTIN</label>
-            <input type="text" id="client_gstin" placeholder="22XXXXX1234X1Z5" oninput="schedulePreview()">
+            <label>Client GSTIN (Recipient)</label>
+            <input type="text" id="client_gstin" placeholder="22XXXXX1234X1Z5" maxlength="15" oninput="handleGSTINInput()">
+            <div class="field-hint" id="client_gstin_hint"></div>
           </div>
         </div>
       </div>

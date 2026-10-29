@@ -387,7 +387,14 @@ html, body {
 /* GST fields visibility */
 .gst-only { display: none; }
 .gst-mode .gst-only { display: block; }
-.gst-mode .form-row .gst-only { display: flex; flex: 1; }
+.gst-mode .form-row .gst-only { display: flex; flex-direction: column; flex: 1; }
+
+/* Inline field validation hints */
+.field-hint { font-size: 10.5px; margin-top: 3px; color: #64748b; min-height: 13px; }
+.field-hint.ok    { color: #16a34a; }
+.field-hint.warn  { color: #d97706; }
+.field-hint.error { color: #dc2626; }
+.form-group input.invalid { border-color: #dc2626; }
 
 /* ---- Optional Sections (Bank, Notes) ---- */
 .optional-section {

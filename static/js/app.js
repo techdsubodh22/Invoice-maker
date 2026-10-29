@@ -124,6 +124,99 @@ function handleGSTToggle() {
   }
 
   rebuildLineItemGrids();
+  if (gstMode) handleGSTINInput(); else schedulePreview();
+}
+
+// ---- GSTIN Helpers ----
+const GST_STATE_CODES = {
+  '01': 'Jammu & Kashmir', '02': 'Himachal Pradesh', '03': 'Punjab', '04': 'Chandigarh',
+  '05': 'Uttarakhand', '06': 'Haryana', '07': 'Delhi', '08': 'Rajasthan', '09': 'Uttar Pradesh',
+  '10': 'Bihar', '11': 'Sikkim', '12': 'Arunachal Pradesh', '13': 'Nagaland', '14': 'Manipur',
+  '15': 'Mizoram', '16': 'Tripura', '17': 'Meghalaya', '18': 'Assam', '19': 'West Bengal',
+  '20': 'Jharkhand', '21': 'Odisha', '22': 'Chhattisgarh', '23': 'Madhya Pradesh', '24': 'Gujarat',
+  '25': 'Daman & Diu', '26': 'Dadra & Nagar Haveli and Daman & Diu', '27': 'Maharashtra',
+  '28': 'Andhra Pradesh (Old)', '29': 'Karnataka', '30': 'Goa', '31': 'Lakshadweep', '32': 'Kerala',
+  '33': 'Tamil Nadu', '34': 'Puducherry', '35': 'Andaman & Nicobar Islands', '36': 'Telangana',
+  '37': 'Andhra Pradesh', '38': 'Ladakh', '97': 'Other Territory', '99': 'Centre Jurisdiction',
+};
+const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+const GSTIN_CHARSET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+// Returns { state, code, pan } for a valid GSTIN, or { error } describing what's wrong
+function parseGSTIN(gstin) {
+  if (gstin.length < 15) return { error: `${gstin.length}/15 characters` };
+  if (!GSTIN_PATTERN.test(gstin)) return { error: 'Invalid format (e.g. 22ABCDE1234F1Z5)' };
+  const state = GST_STATE_CODES[gstin.slice(0, 2)];
+  if (!state) return { error: `Unknown state code ${gstin.slice(0, 2)}` };
+
+  // Mod-36 check digit (last character)
+  let sum = 0;
+  for (let i = 0; i < 14; i++) {
+    const p = GSTIN_CHARSET.indexOf(gstin[i]) * (i % 2 ? 2 : 1);
+    sum += Math.floor(p / 36) + (p % 36);
+  }
+  if (GSTIN_CHARSET[(36 - (sum % 36)) % 36] !== gstin[14]) {
+    return { error: 'Check digit mismatch — likely a typo' };
+  }
+  return { state, code: gstin.slice(0, 2), pan: gstin.slice(2, 12) };
+}
+
+function readGSTIN(id) {
+  const el = document.getElementById(id);
+  if (!el) return '';
+  const upper = el.value.toUpperCase().replace(/\s/g, '');
+  if (upper !== el.value) {
+    const pos = el.selectionStart;
+    el.value = upper;
+    el.setSelectionRange(pos, pos);
+  }
+  return upper;
+}
+
+function setGSTINHint(id, text, cls) {
+  const hint = document.getElementById(id + '_hint');
+  const input = document.getElementById(id);
+  if (hint) { hint.textContent = text; hint.className = 'field-hint' + (cls ? ' ' + cls : ''); }
+  if (input) input.classList.toggle('invalid', cls === 'error');
+}
+
+// Validates both GSTINs, then derives PAN, Place of Supply and CGST/SGST vs IGST
+function handleGSTINInput() {
+  const supplier  = readGSTIN('consultant_gstin');
+  const recipient = readGSTIN('client_gstin');
+  const sInfo = supplier  ? parseGSTIN(supplier)  : null;
+  const rInfo = recipient ? parseGSTIN(recipient) : null;
+
+  // Supplier: fill PAN if empty, warn if it disagrees with the GSTIN
+  if (!sInfo) setGSTINHint('consultant_gstin', '', '');
+  else if (sInfo.error) setGSTINHint('consultant_gstin', sInfo.error, 'error');
+  else {
+    const panEl = document.getElementById('consultant_pan');
+    if (panEl && !panEl.value.trim()) panEl.value = sInfo.pan;
+    if (panEl && panEl.value.trim().toUpperCase() !== sInfo.pan) {
+      setGSTINHint('consultant_gstin', `${sInfo.state} · PAN in GSTIN is ${sInfo.pan}, doesn't match PAN field`, 'warn');
+    } else {
+      setGSTINHint('consultant_gstin', `✓ ${sInfo.state} (${sInfo.code})`, 'ok');
+    }
+  }
+
+  // Recipient: fill Place of Supply unless the user typed their own
+  if (!rInfo) setGSTINHint('client_gstin', '', '');
+  else if (rInfo.error) setGSTINHint('client_gstin', rInfo.error, 'error');
+  else {
+    setGSTINHint('client_gstin', `✓ ${rInfo.state} (${rInfo.code})`, 'ok');
+    const posEl = document.getElementById('place_of_supply');
+    if (posEl && (!posEl.value.trim() || posEl.dataset.userEdited !== 'true')) {
+      posEl.value = `${rInfo.state} (${rInfo.code})`;
+    }
+  }
+
+  // Same state → CGST + SGST (intra-state); different states → IGST (inter-state)
+  if (sInfo && !sInfo.error && rInfo && !rInfo.error) {
+    const typeEl = document.getElementById('gst-type');
+    if (typeEl) typeEl.value = sInfo.code === rInfo.code ? 'cgst_sgst' : 'igst';
+  }
+
   schedulePreview();
 }
 
@@ -395,18 +488,19 @@ function collectFormData() {
     invoice_date:     document.getElementById('invoice_date')?.value     || '',
     due_date:         document.getElementById('due_date')?.value         || '',
     place_of_supply:  document.getElementById('place_of_supply')?.value  || '',
+    reverse_charge:   document.getElementById('reverse_charge')?.value   || 'No',
 
     consultant_name:    document.getElementById('consultant_name')?.value    || '',
     consultant_address: document.getElementById('consultant_address')?.value || '',
     consultant_phone:   document.getElementById('consultant_phone')?.value   || '',
     consultant_email:   document.getElementById('consultant_email')?.value   || '',
     consultant_pan:     document.getElementById('consultant_pan')?.value     || '',
-    consultant_gstin:   document.getElementById('consultant_gstin')?.value   || '',
+    consultant_gstin:   (document.getElementById('consultant_gstin')?.value || '').trim().toUpperCase(),
 
     client_company: document.getElementById('client_company')?.value || '',
     client_address: document.getElementById('client_address')?.value || '',
     client_contact: document.getElementById('client_contact')?.value || '',
-    client_gstin:   document.getElementById('client_gstin')?.value   || '',
+    client_gstin:   (document.getElementById('client_gstin')?.value || '').trim().toUpperCase(),
 
     // Bank — only send if enabled
     show_bank:      bankOn,

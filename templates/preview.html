@@ -19,7 +19,7 @@
 
   <div class="inv-header">
     <div class="inv-title-block">
-      <div class="inv-title">INVOICE</div>
+      <div class="inv-title">{{ 'TAX INVOICE' if gst else 'INVOICE' }}</div>
       {% if d.get('consultant_name') %}<div class="inv-issuer">{{ d.get('consultant_name') }}</div>{% endif %}
     </div>
     <div class="inv-meta">
@@ -27,6 +27,7 @@
       <div class="meta-row"><span>Date</span><strong>{{ d.get('invoice_date', '') }}</strong></div>
       {% if d.get('due_date') %}<div class="meta-row"><span>Due Date</span><strong>{{ d.get('due_date') }}</strong></div>{% endif %}
       {% if gst and d.get('place_of_supply') %}<div class="meta-row"><span>Place of Supply</span><strong>{{ d.get('place_of_supply') }}</strong></div>{% endif %}
+      {% if gst %}<div class="meta-row"><span>Reverse Charge</span><strong>{{ d.get('reverse_charge', 'No') }}</strong></div>{% endif %}
     </div>
   </div>
 
@@ -133,7 +134,7 @@
 
   <div class="inv-header">
     <div class="inv-header-left">
-      <div class="inv-title">INVOICE</div>
+      <div class="inv-title">{{ 'TAX INVOICE' if gst else 'INVOICE' }}</div>
       {% if d.get('consultant_name') %}<div class="inv-subtitle">{{ d.get('consultant_name') }}</div>{% endif %}
     </div>
     <div class="inv-header-right">
@@ -142,6 +143,7 @@
         <span class="ml">Issued</span><span>{{ d.get('invoice_date', '') }}</span>
         {% if d.get('due_date') %}<span class="ml">Due</span><span>{{ d.get('due_date') }}</span>{% endif %}
         {% if gst and d.get('place_of_supply') %}<span class="ml">Supply</span><span>{{ d.get('place_of_supply') }}</span>{% endif %}
+        {% if gst %}<span class="ml">Reverse Charge</span><span>{{ d.get('reverse_charge', 'No') }}</span>{% endif %}
       </div>
     </div>
   </div>
@@ -249,7 +251,7 @@
 
   <div class="inv-header">
     <div class="inv-header-left">
-      <div class="inv-title">Invoice</div>
+      <div class="inv-title">{{ 'Tax Invoice' if gst else 'Invoice' }}</div>
       {% if d.get('consultant_name') %}<div class="inv-issuer">{{ d.get('consultant_name') }}</div>{% endif %}
     </div>
     <div class="inv-header-right">
@@ -258,6 +260,7 @@
         Issued {{ d.get('invoice_date', '') }}
         {% if d.get('due_date') %} &nbsp;·&nbsp; Due {{ d.get('due_date') }}{% endif %}
         {% if gst and d.get('place_of_supply') %}<br>Place of Supply: {{ d.get('place_of_supply') }}{% endif %}
+        {% if gst %}<br>Reverse Charge: {{ d.get('reverse_charge', 'No') }}{% endif %}
       </div>
     </div>
   </div>
@@ -365,7 +368,7 @@
 
   <div class="inv-header">
     <div class="inv-header-left">
-      <div class="inv-title">INVOICE</div>
+      <div class="inv-title">{{ 'TAX INVOICE' if gst else 'INVOICE' }}</div>
       {% if d.get('consultant_name') %}<div class="inv-subtitle">{{ d.get('consultant_name') }}</div>{% endif %}
     </div>
     <div class="inv-header-right">
@@ -374,6 +377,7 @@
         <span>Invoice Date</span><span>{{ d.get('invoice_date', '') }}</span>
         {% if d.get('due_date') %}<span>Payment Due</span><span>{{ d.get('due_date') }}</span>{% endif %}
         {% if gst and d.get('place_of_supply') %}<span>Place of Supply</span><span>{{ d.get('place_of_supply') }}</span>{% endif %}
+        {% if gst %}<span>Reverse Charge</span><span>{{ d.get('reverse_charge', 'No') }}</span>{% endif %}
       </div>
     </div>
     <div class="inv-header-accent"></div>
